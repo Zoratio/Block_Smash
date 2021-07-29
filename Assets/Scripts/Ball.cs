@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Ball : MonoBehaviour
 {
@@ -12,7 +9,8 @@ public class Ball : MonoBehaviour
     [SerializeField] AudioClip paddleBounce;
     [SerializeField] AudioClip blockBounce;
     [SerializeField] AudioClip wallBounce;
-
+    [SerializeField] AudioClip unbreakableBounce;
+    [SerializeField] float randomFactor = 0.2f;
 
 
 
@@ -20,6 +18,7 @@ public class Ball : MonoBehaviour
     bool hasStarted = false;
     AudioClip audioClip;
     AudioSource audioSource;    //If I change the volume for this, do it for the block breaking as well
+    Rigidbody2D myRigidBody2D;
 
 
 
@@ -28,6 +27,7 @@ public class Ball : MonoBehaviour
     {
         paddleToBallVector = transform.position - paddle1.transform.position;
         audioSource = GetComponent<AudioSource>();
+        myRigidBody2D = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
@@ -50,13 +50,14 @@ public class Ball : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            GetComponent<Rigidbody2D>().velocity = new Vector2(xPush, yPush);
             hasStarted = true;
+            myRigidBody2D.velocity = new Vector2(xPush, yPush);
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        Vector2 velocityTweak = new Vector2(Random.Range(0f, randomFactor), Random.Range(0f, randomFactor));
         if (hasStarted)
         {
             string tag = collision.gameObject.tag;
@@ -71,14 +72,19 @@ public class Ball : MonoBehaviour
                     audioClip = wallBounce;
                     break;
 
-                case "Block":
+                case "Breakable":
                     audioClip = blockBounce;
+                    break;
+
+                case "Unbreakable":
+                    audioClip = unbreakableBounce;
                     break;
 
                 default:
                     return;
             }
             audioSource.PlayOneShot(audioClip);
+            myRigidBody2D.velocity += velocityTweak;
         }        
     }
 }
